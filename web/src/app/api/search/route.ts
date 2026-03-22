@@ -99,7 +99,7 @@ Return ONLY a valid JSON array, no markdown:
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
 
   let response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2000,
     tools: [{ type: 'web_search_20260209', name: 'web_search' }],
     messages,
@@ -112,7 +112,7 @@ Return ONLY a valid JSON array, no markdown:
   while (response.stop_reason === 'pause_turn' && continuations < MAX_CONTINUATIONS) {
     messages.push({ role: 'assistant', content: response.content })
     response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       tools: [{ type: 'web_search_20260209', name: 'web_search' }],
       messages,
