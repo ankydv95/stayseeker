@@ -4,6 +4,9 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import type { Listing, ParsedFilters } from '@/types'
 
+// Allow up to 60s on Hobby plan (scraper + Claude fallback need time)
+export const maxDuration = 60
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
