@@ -59,6 +59,9 @@ interface CardProps {
 
 function ListingCard({ listing, saved, onHeart }: CardProps) {
   const [hovered, setHovered] = useState(false)
+  const [imgError, setImgError] = useState(false)
+
+  const showImg = listing.imageUrl && !imgError
 
   return (
     <div
@@ -66,13 +69,14 @@ function ListingCard({ listing, saved, onHeart }: CardProps) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Image */}
+      {/* Image — fixed 300px height so all cards are uniform */}
       <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden',
-        aspectRatio: '20/19', background: '#f0f0f0' }}>
-        {listing.imageUrl ? (
+        height: 300, background: 'linear-gradient(135deg, #e8e8e8 0%, #d4d4d4 100%)' }}>
+        {showImg ? (
           <img
             src={`/api/image-proxy?url=${encodeURIComponent(listing.imageUrl)}`}
             alt={listing.title}
+            onError={() => setImgError(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
               transform: hovered ? 'scale(1.03)' : 'scale(1)',
               transition: 'transform 0.3s ease' }}
@@ -80,11 +84,17 @@ function ListingCard({ listing, saved, onHeart }: CardProps) {
           />
         ) : (
           <div
-            style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f5f5f5, #e8e8e8)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}
+            style={{ width: '100%', height: '100%',
+              background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 50%, #d4d4d4 100%)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: 8 }}
             onClick={() => window.open(listing.airbnbUrl, '_blank')}
           >
-            🏠
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="m21 15-5-5L5 21"/>
+            </svg>
+            <span style={{ fontSize: 12, color: '#aaa' }}>No image</span>
           </div>
         )}
 
@@ -583,7 +593,7 @@ export default function HomePage() {
         {/* Results */}
         {!loading && listings.length > 0 && (
           <div className="rg" style={{ display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px 20px' }}>
+            gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px 20px', alignItems: 'start' }}>
             {listings.map((l) => (
               <ListingCard key={l.id} listing={l}
                 saved={savedIds.has(l.id)} onHeart={handleHeart} />
