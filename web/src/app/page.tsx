@@ -71,7 +71,7 @@ function ListingCard({ listing, saved, onHeart }: CardProps) {
         aspectRatio: '20/19', background: '#f0f0f0' }}>
         {listing.imageUrl ? (
           <img
-            src={listing.imageUrl}
+            src={`/api/image-proxy?url=${encodeURIComponent(listing.imageUrl)}`}
             alt={listing.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
               transform: hovered ? 'scale(1.03)' : 'scale(1)',
