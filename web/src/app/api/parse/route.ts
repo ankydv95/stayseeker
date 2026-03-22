@@ -35,7 +35,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No text response from model' }, { status: 500 })
     }
 
-    const parsed = JSON.parse(textBlock.text)
+    // Strip markdown fences and extract JSON object/array
+    const raw = textBlock.text
+      .replace(/^```(?:json)?\s*/im, '')
+      .replace(/\s*```\s*$/im, '')
+      .trim()
+
+    // Extract first {...} block in case of extra text
+    const jsonMatch = raw.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      console.error('[parse] no JSON in response:', raw.slice(0, 200))
+      return NextResponse.json({ error: 'Model returned invalid JSON' }, { status: 500 })
+    }
+
+    const parsed = JSON.parse(jsonMatch[0])
     return NextResponse.json(parsed)
   } catch (error) {
     if (error instanceof Anthropic.BadRequestError) {
