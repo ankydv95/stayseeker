@@ -78,6 +78,7 @@ interface ClaudeListing {
   title: string
   location: string
   price: number | string
+  currency?: string
   amenities: string[]
   description: string
   url: string
@@ -86,15 +87,19 @@ interface ClaudeListing {
 }
 
 async function fetchFromClaude(query: string): Promise<Listing[]> {
-  const prompt = `Find 6 real Airbnb listing URLs that match this travel request: "${query}"
+  const prompt = `Search for 6 real Airbnb listings matching: "${query}"
 
-Return ONLY a valid JSON array, no markdown:
-[{"title","location","price","amenities":[],"description","url","imageUrl","emoji"}]
+Use web_search to find real listings. For each listing also search for its Airbnb page to get the photo URL.
 
-- url must be a real https://www.airbnb.com/rooms/<id> link
-- price should be a number (USD per night)
-- imageUrl can be empty string if unknown
-- emoji should represent the property vibe`
+Return ONLY a valid JSON array, no markdown, no extra text:
+[{"title":"...","location":"...","price":150,"currency":"USD","amenities":[],"description":"...","url":"https://www.airbnb.com/rooms/12345","imageUrl":"https://a0.muscache.com/...","emoji":"🏡"}]
+
+Rules:
+- url: real https://www.airbnb.com/rooms/<numericId> link
+- price: integer per night in the local currency of the destination
+- currency: 3-letter ISO code e.g. "USD", "INR", "EUR"
+- imageUrl: find the actual Airbnb listing photo URL (from muscache.com CDN). Search "[title] airbnb site:airbnb.com" then look for image URLs in the results. Use empty string only if not found.
+- emoji: single emoji representing the property vibe`
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
 
@@ -143,6 +148,7 @@ Return ONLY a valid JSON array, no markdown:
       location: l.location ?? '',
       price: priceNum,
       pricePerNight: priceNum,
+      currency: l.currency ?? 'USD',
       rating: 0,
       reviewCount: 0,
       imageUrl: l.imageUrl ?? '',

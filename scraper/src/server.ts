@@ -99,10 +99,8 @@ app.post('/scrape', async (req: Request, res: Response) => {
 
     const page = await context.newPage()
 
-    // Block unnecessary resources to speed up scraping
-    await page.route('**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf,otf}', (route) =>
-      route.abort()
-    )
+    // Block only slow/unnecessary resources (keep images so we can extract URLs)
+    await page.route('**/*.{woff,woff2,ttf,otf}', (route) => route.abort())
     await page.route('**/{analytics,tracking,ads}**', (route) => route.abort())
 
     await page.goto(airbnbUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
@@ -172,15 +170,23 @@ app.post('/scrape', async (req: Request, res: Response) => {
           }
         }
 
-        // Image — skip blocked images, just grab the src attr
+        // Image — prefer srcset (Airbnb puts real CDN URLs there), fall back to src
         const imgEl = card.querySelector('img')
-        const imageUrl = imgEl?.getAttribute('src') ?? imgEl?.getAttribute('data-src') ?? ''
+        const srcset = imgEl?.getAttribute('srcset') ?? ''
+        // Extract first URL from srcset "https://... 1x, https://... 2x"
+        const srcsetUrl = srcset ? srcset.split(',')[0].trim().split(' ')[0] : ''
+        const imageUrl = srcsetUrl || imgEl?.getAttribute('src') || imgEl?.getAttribute('data-src') || ''
 
         // Listing URL
         const linkEl = card.querySelector('a[href*="/rooms/"]') as HTMLAnchorElement | null
         const href = linkEl?.getAttribute('href') ?? ''
 
-        return { title, priceText, ariaLabel, imageUrl, href }
+        // Location — subtitle text under the title
+        const subtitleEl = card.querySelector('[data-testid="listing-card-subtitle"]')
+          ?? card.querySelector('[data-testid="listing-card-name"]')
+        const location = subtitleEl?.textContent?.trim() ?? ''
+
+        return { title, priceText, ariaLabel, imageUrl, href, location }
       })
     })
 
@@ -202,7 +208,7 @@ app.post('/scrape', async (req: Request, res: Response) => {
             reviewCount,
             imageUrl: l.imageUrl,
             airbnbUrl,
-            location: '',
+            location: l.location,
           } satisfies ScrapedListing
         }),
       totalCount: 0,

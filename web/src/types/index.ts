@@ -4,6 +4,7 @@ export interface Listing {
   location: string
   price: number
   pricePerNight: number
+  currency?: string
   rating: number
   reviewCount: number
   imageUrl: string

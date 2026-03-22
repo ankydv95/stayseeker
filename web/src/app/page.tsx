@@ -25,8 +25,17 @@ const B = '#DDDDDD'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmt(n: number) {
-  return n ? `₹${n.toLocaleString('en-IN')}` : '—'
+function fmt(n: number, currency = 'INR') {
+  if (!n) return '—'
+  try {
+    return new Intl.NumberFormat('en', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(n)
+  } catch {
+    return `${n.toLocaleString()}`
+  }
 }
 
 function initials(email?: string) {
@@ -161,7 +170,7 @@ function ListingCard({ listing, saved, onHeart }: CardProps) {
           </div>
         )}
         <div style={{ fontSize: 15, color: T, marginTop: 6 }}>
-          <span style={{ fontWeight: 700 }}>{fmt(listing.pricePerNight || listing.price)}</span>
+          <span style={{ fontWeight: 700 }}>{fmt(listing.pricePerNight || listing.price, listing.currency || 'INR')}</span>
           <span style={{ fontWeight: 400, color: S }}> / night</span>
         </div>
       </div>
